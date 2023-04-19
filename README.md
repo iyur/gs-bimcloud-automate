@@ -1,2 +1,2 @@
 # gs-bimcloud-automate
-automate bimcloud functionality
+automate bimcloud functionality - test repo
