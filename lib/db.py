@@ -28,14 +28,6 @@ class DB:
 		except:
 			print('something wrong with connect')
 
-	def table(self, name):
-		try:
-			c = self.con.cursor()
-			c.execute('SELECT * FROM ' + name)
-			return(c.fetchall())
-		except:
-			print('something wrong with table')
-
 
 	def addFolderData(self, id, pid, name, logtime):
 		try:
