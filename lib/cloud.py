@@ -5,6 +5,7 @@ import os
 import requests
 import time
 import json
+from datetime import datetime
 from .db import DB
 from .managerapi import ManagerApi
 from .blobserverapi import BlobServerApi
@@ -44,6 +45,7 @@ class Cloud:
 		try:
 			self.login()
 			self.fetchFolders()
+			# print(self.logtime)
 		finally:
 			self.logout()
 
@@ -99,7 +101,7 @@ class Cloud:
 				else:
 					build = f['$version']
 				self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build, self.logtime)
-				print(f["name"])
+				# print(f["name"])
 				if f['type'] == 'library':
 					pass
 				else:
@@ -111,7 +113,7 @@ class Cloud:
 		try:
 			for u in users:
 				self.db.addUserData(u['id'], u['username'], u['name'], jfid, jpid, u['online'], u['lastActive'], self.logtime)
-				print(u['username'])
+				# print(u['username'])
 		except:
 			print(f'[{round((time.time() - TS),10)}]: wrong user data')
 

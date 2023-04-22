@@ -22,7 +22,7 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users \
-				(id text, login text, name text, jfid text, jpid text, online bool, spotted integer, logtime)'
+				(id text, login text, name text, jfid text, jpid text, online bool, spotted integer, logtime integer)'
 			)
 			self.con = con
 		except:
