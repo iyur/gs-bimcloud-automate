@@ -14,7 +14,7 @@ class DB:
 		try:
 			con = sqlite3.connect(self.path)
 			con.execute('CREATE TABLE IF NOT EXISTS folders (id text, pid text, name text)')
-			con.execute('CREATE TABLE IF NOT EXISTS files (id text, pid text, name text, size integer, modified integer)')
+			con.execute('CREATE TABLE IF NOT EXISTS files (id text, pid text, name text, type text, size integer, modified integer, build text)')
 			self.con = con
 		except:
 			print('something wrong with connect')
@@ -36,10 +36,10 @@ class DB:
 		except:
 			print('something wrong with folder insertion')
 
-	def addFileDataData(self, id, pid, name, size, modified):
+	def addFileDataData(self, id, pid, name, type, size, modified, build):
 		try:
 			c = self.con.cursor()
-			c.execute("INSERT INTO files (id, pid, name, size, modified) VALUES (?, ?, ?, ?, ?)", (id, pid, name, size, modified))
+			c.execute("INSERT INTO files (id, pid, name, type, size, modified, build) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, pid, name, type, size, modified, build))
 			self.con.commit()
 		except:
 			print('something wrong with file insertion')

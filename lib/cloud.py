@@ -91,7 +91,11 @@ class Cloud:
 		criterion = { '$eq': { '$parentId': pid } }
 		files = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
 		for f in files:
-			self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['$size'], f['$modifiedDate'])
+			if f['type'] == 'library':
+				build = '0'
+			else:
+				build = f['$version']
+			self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build)
 			print(f["name"] + ' (' + str(f["$size"]) + ')')
 
 	@staticmethod
