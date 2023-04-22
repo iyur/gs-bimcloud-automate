@@ -7,14 +7,23 @@ class DB:
 
 		self.path = "C:\\Users\\i.yurasov\\Desktop\\dev\\gs-bimcloud-automate\\stats.db"
 		self.con = None
-
 		self.connect();
 
 	def connect(self):
 		try:
 			con = sqlite3.connect(self.path)
-			con.execute('CREATE TABLE IF NOT EXISTS folders (id text, pid text, name text, logtime integer)')
-			con.execute('CREATE TABLE IF NOT EXISTS files (id text, pid text, name text, type text, size integer, modified integer, build text, logtime integer)')
+			con.execute(
+				'CREATE TABLE IF NOT EXISTS folders \
+				(id text, pid text, name text, logtime integer)'
+			)
+			con.execute(
+				'CREATE TABLE IF NOT EXISTS files \
+				(id text, pid text, name text, type text, size real, modified integer, build text, logtime integer)'
+			)
+			con.execute(
+				'CREATE TABLE IF NOT EXISTS users \
+				(id text, login text, name text, jfid text, jpid text, online bool, spotted integer, logtime)'
+			)
 			self.con = con
 		except:
 			print('something wrong with connect')
@@ -43,3 +52,11 @@ class DB:
 			self.con.commit()
 		except:
 			print('something wrong with file insertion')
+
+	def addUserData(self, id, login, name, jfid, jpid, online, spotted, logtime):
+		try:
+			c = self.con.cursor()
+			c.execute("INSERT INTO users (id, login, name, jfid, jpid, online, spotted, logtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, login, name, jfid, jpid, online, spotted, logtime))
+			self.con.commit()
+		except:
+			print('something wrong with user insertion')

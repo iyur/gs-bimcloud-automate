@@ -89,16 +89,32 @@ class Cloud:
 			print(f'[{round((time.time() - TS),10)}]: {err}')
 
 	def fetchFiles(self, pid):
-		options = { 'sort-by': 'name' }
-		criterion = { '$eq': { '$parentId': pid } }
-		files = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
-		for f in files:
-			if f['type'] == 'library':
-				build = '0'
-			else:
-				build = f['$version']
-			self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build, self.logtime)
-			print(f["name"] + ' (' + str(f["$size"]) + ')')
+		try:
+			options = { 'sort-by': 'name' }
+			criterion = { '$eq': { '$parentId': pid } }
+			files = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
+			for f in files:
+				if f['type'] == 'library':
+					build = '0'
+				else:
+					build = f['$version']
+				self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build, self.logtime)
+				print(f["name"])
+				if f['type'] == 'library':
+					pass
+				else:
+					self.fetchUsers(f['$joinedUsers'], f['id'], f['$parentId'])
+		except BIMcloudManagerError as err:
+			print(f'[{round((time.time() - TS),10)}]: {err}')		
+
+	def fetchUsers(self, users, jfid, jpid):
+		try:
+			for u in users:
+				self.db.addUserData(u['id'], u['username'], u['name'], jfid, jpid, u['online'], u['lastActive'], self.logtime)
+				print(u['username'])
+		except:
+			print(f'[{round((time.time() - TS),10)}]: wrong user data')
+
 
 	@staticmethod
 	def to_unique(name):
