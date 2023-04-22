@@ -38,6 +38,8 @@ class Cloud:
 		# Changeset polling starts on revision 0
 		self._next_revision_for_sync = 0
 
+		self.logtime = int(time.time())
+
 	def run(self):
 		try:
 			self.login()
@@ -81,7 +83,7 @@ class Cloud:
 			criterion = { '$eq': { '$parentId': pid } }
 			folders = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
 			for f in folders:
-				self.db.addFolderData(f['id'], f['$parentId'], f['name'])
+				self.db.addFolderData(f['id'], f['$parentId'], f['name'], self.logtime)
 				self.fetchFiles(f['id'])
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')
@@ -95,7 +97,7 @@ class Cloud:
 				build = '0'
 			else:
 				build = f['$version']
-			self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build)
+			self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build, self.logtime)
 			print(f["name"] + ' (' + str(f["$size"]) + ')')
 
 	@staticmethod
