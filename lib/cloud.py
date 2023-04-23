@@ -78,7 +78,7 @@ class Cloud:
 					if f['access'] == 'locked':
 						lock = True
 					self.fetchUsers(f['$joinedUsers'], f['id'])
-				self.db.addFileData(f['id'], f['$parentId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
+				self.db.addFileData(f['id'], f['$parentId'], f['modelServerId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')		
 
@@ -98,6 +98,6 @@ class Cloud:
 			modules = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
 			for m in modules:
 				self.iServers += 1
-				self.db.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1000,0), round(portal['$lastStartOn']/1000,0))
+				self.db.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1,0), round(portal['$lastStartOn']/1,0))
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')	
