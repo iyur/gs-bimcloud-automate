@@ -18,11 +18,11 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS files \
-				(id text, pid text, name text, type text, size real, modified integer, build text, logtime integer)'
+				(id text, pid text, name text, type int, size real, lock bool, modified integer, build text, logtime integer)'
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users \
-				(id text, login text, name text, jfid text, jpid text, online bool, spotted integer, logtime integer)'
+				(id text, login text, name text, jfid text, online bool, spotted integer, logtime integer)'
 			)
 			self.con = con
 		except:
@@ -37,18 +37,18 @@ class DB:
 		except:
 			print('something wrong with folder insertion')
 
-	def addFileDataData(self, id, pid, name, type, size, modified, build, logtime):
+	def addFileDataData(self, id, pid, name, type, size, lock, modified, build, logtime):
 		try:
 			c = self.con.cursor()
-			c.execute("INSERT INTO files (id, pid, name, type, size, modified, build, logtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, pid, name, type, size, modified, build, logtime))
+			c.execute("INSERT INTO files (id, pid, name, type, size, lock, modified, build, logtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, pid, name, type, size, lock, modified, build, logtime))
 			self.con.commit()
 		except:
 			print('something wrong with file insertion')
 
-	def addUserData(self, id, login, name, jfid, jpid, online, spotted, logtime):
+	def addUserData(self, id, login, name, jfid, online, spotted, logtime):
 		try:
 			c = self.con.cursor()
-			c.execute("INSERT INTO users (id, login, name, jfid, jpid, online, spotted, logtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, login, name, jfid, jpid, online, spotted, logtime))
+			c.execute("INSERT INTO users (id, login, name, jfid, online, spotted, logtime) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, login, name, jfid, online, spotted, logtime))
 			self.con.commit()
 		except:
 			print('something wrong with user insertion')

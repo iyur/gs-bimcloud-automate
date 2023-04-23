@@ -33,6 +33,10 @@ class Cloud:
 		try:
 			self.login()
 			self.fetchFolders()
+			# file = self._manager_api.get_resource(self._session_id, by_id='99A77C87-0EBC-460F-BB7D-779D454F0B98')
+			# print(file)
+			# print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+			# print(datetime.fromtimestamp(int(time.time())))
 		finally:
 			self.logout()
 
@@ -83,21 +87,23 @@ class Cloud:
 			criterion = { '$eq': { '$parentId': pid } }
 			files = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
 			for f in files:
+				lock = False
+				type = 10
 				if f['type'] == 'library':
 					build = '0'
+					type = 20
 				else:
 					build = f['$version']
-				self.db.addFileDataData(f['id'], f['$parentId'], f['name'], f['type'], f['$size'], f['$modifiedDate'], build, self.logtime)
-				if f['type'] == 'library':
-					pass
-				else:
-					self.fetchUsers(f['$joinedUsers'], f['id'], f['$parentId'])
+					if f['access'] == 'locked':
+						lock = True
+					self.fetchUsers(f['$joinedUsers'], f['id'])
+				self.db.addFileDataData(f['id'], f['$parentId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build, self.logtime)
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')		
 
-	def fetchUsers(self, users, jfid, jpid):
+	def fetchUsers(self, users, jfid):
 		try:
 			for u in users:
-				self.db.addUserData(u['id'], u['username'], u['name'], jfid, jpid, u['online'], u['lastActive'], self.logtime)
+				self.db.addUserData(u['id'], u['username'], u['name'], jfid, u['online'], round(u['lastActive']/1000,0), self.logtime)
 		except:
 			print(f'[{round((time.time() - TS),10)}]: wrong user data')
