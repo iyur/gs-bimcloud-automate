@@ -18,6 +18,10 @@ class DB:
 		try:
 			con = sqlite3.connect(self.path)
 			con.execute(
+				'CREATE TABLE IF NOT EXISTS entries \
+				(id integer primary key, logtime integer)'
+			)
+			con.execute(
 				'CREATE TABLE IF NOT EXISTS folders \
 				(id text, pid text, name text, log integer)'
 			)
@@ -27,11 +31,15 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users \
-				(id text, login text, name text, jfid text, online bool, spotted integer, log integer)'
+				(id text, login text, name text, online bool, spotted integer, log integer)'
 			)
 			con.execute(
-				'CREATE TABLE IF NOT EXISTS entries \
-				(id integer primary key, logtime integer)'
+				'CREATE TABLE IF NOT EXISTS users_files \
+				(id text, jfid text, log integer)'
+			)
+			con.execute(
+				'CREATE TABLE IF NOT EXISTS servers \
+				(id text, name text, freespace integer, firstRun integer, lastStart integer, log integer)'
 			)
 			self.con = con
 		except:
@@ -64,7 +72,7 @@ class DB:
 		except:
 			print('something wrong with folder insertion')
 
-	def addFileDataData(self, id, pid, name, type, size, lock, modified, build):
+	def addFileData(self, id, pid, name, type, size, lock, modified, build):
 		try:
 			c = self.con.cursor()
 			c.execute("INSERT INTO files (id, pid, name, type, size, lock, modified, build, log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, pid, name, type, size, lock, modified, build, self.logId))
@@ -75,7 +83,19 @@ class DB:
 	def addUserData(self, id, login, name, jfid, online, spotted):
 		try:
 			c = self.con.cursor()
-			c.execute("INSERT INTO users (id, login, name, jfid, online, spotted, log) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, login, name, jfid, online, spotted, self.logId))
+			c.execute("SELECT id FROM users WHERE id = ?", (id,))
+			fetch = c.fetchone()
+			if fetch is None:
+				c.execute("INSERT INTO users (id, login, name, online, spotted, log) VALUES (?, ?, ?, ?, ?, ?)", (id, login, name, online, spotted, self.logId))
+			c.execute("INSERT INTO users_files (id, jfid, log) VALUES (?, ?, ?)", (id, jfid, self.logId)) # files relationship
 			self.con.commit()
 		except:
 			print('something wrong with user insertion')
+
+	def addServerData(self, id, name, freespace, firstRun, lastStart):
+		try:
+			c = self.con.cursor()
+			c.execute("INSERT INTO servers (id, name, freespace, firstRun, lastStart, log) VALUES (?, ?, ?, ?, ?, ?)", (id, name, freespace, firstRun, lastStart, self.logId))
+			self.con.commit()
+		except:
+			print('something wrong with server insertion')

@@ -22,13 +22,15 @@ class Cloud:
 		self.iFolders = 0
 		self.iFiles = 0
 		self.iUsers = 0
+		self.iServers = 0
 
 	def run(self):
 		try:
 			self.login()
 			self.db.logEntry()
 			self.fetchFolders()
-			print(f'[{round((time.time() - TS),10)}]: Entry #{self.db.logId}: {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins recorded')
+			self.fetchServers()
+			print(f'[{round((time.time() - TS),10)}]: Entry #{self.db.logId}: {self.iServers} servers, {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins')
 		finally:
 			self.logout()
 
@@ -48,9 +50,9 @@ class Cloud:
 
 	def fetchFolders(self, pid='projectRoot'):
 		print(f'[{round((time.time() - TS),10)}]: Retrieving resources ...')
+		options = { 'sort-by': 'name' }
+		criterion = { '$eq': { '$parentId': pid } }
 		try:
-			options = { 'sort-by': 'name' }
-			criterion = { '$eq': { '$parentId': pid } }
 			folders = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
 			for f in folders:
 				self.iFolders += 1
@@ -60,9 +62,9 @@ class Cloud:
 			print(f'[{round((time.time() - TS),10)}]: {err}')
 
 	def fetchFiles(self, pid):
+		options = { 'sort-by': 'name' }
+		criterion = { '$eq': { '$parentId': pid } }
 		try:
-			options = { 'sort-by': 'name' }
-			criterion = { '$eq': { '$parentId': pid } }
 			files = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
 			for f in files:
 				self.iFiles += 1
@@ -76,7 +78,7 @@ class Cloud:
 					if f['access'] == 'locked':
 						lock = True
 					self.fetchUsers(f['$joinedUsers'], f['id'])
-				self.db.addFileDataData(f['id'], f['$parentId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
+				self.db.addFileData(f['id'], f['$parentId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')		
 
@@ -87,3 +89,15 @@ class Cloud:
 				self.db.addUserData(u['id'], u['username'], u['name'], jfid, u['online'], round(u['lastActive']/1000,0))
 		except:
 			print(f'[{round((time.time() - TS),10)}]: wrong user data')
+
+	def fetchServers(self):
+		options = { 'sort-by': 'name' }
+		criterion = { '$eq': { 'type': 'modelServer' } }
+		try:
+			portal = self._manager_api.get_resource(self._session_id, by_id='portalServer')
+			modules = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
+			for m in modules:
+				self.iServers += 1
+				self.db.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1000,0), round(portal['$lastStartOn']/1000,0))
+		except BIMcloudManagerError as err:
+			print(f'[{round((time.time() - TS),10)}]: {err}')	
