@@ -1,25 +1,36 @@
 import argparse
 import sys
 import lib
+import time
+from multiprocessing import Process
 
-def start():
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-m', '--manager', required=True, help='Url of BIMcloud Manager.')
-	parser.add_argument('-u', '--user', required=True, help='User name.')
-	parser.add_argument('-p', '--password', required=True, help='Password.')
-	parser.add_argument('-c', '--clientid', required=True, help='3rd party client id (arbitrary unique string, your domain for example).')
-	parser.add_argument('-d', '--debug', required=False, help='Debug exceptions.', action='store_true')
-	args = parser.parse_args()
+def worker(server, logtime):
+	cmd = argparse.ArgumentParser()
+	cmd.add_argument('-p', '--password', required=True, help='Password.')
+	cmd.add_argument('-d', '--debug', required=False, help='Debug exceptions.', action='store_true')
+	arg = cmd.parse_args()
 
-	cloud = lib.Cloud(args.manager, args.user, args.password, args.clientid)
+	cloud = lib.Cloud(server, 'masteradmin', arg.password, 'archimatika.com', logtime)
+
 	try:
-		cloud.run()
+		cloud.collect()
 	except Exception as err:
 		print(getattr(err, 'message', str(err) or repr(err)), file=sys.stderr)
-		if args.debug:
+		if arg.debug:
 			raise err
 		else:
 			exit(1)
 
 if __name__ == '__main__':
-	start()
+
+	servers = ['http://tw.archimatika.com:22000', 'http://tw.archimatika.com:25000']
+	logtime = int(time.time())
+
+	processes = []
+	for server in servers:
+		p = Process(target=worker, args=(server,logtime,))
+		processes.append(p)
+		p.start()
+
+	for p in processes:
+		p.join()

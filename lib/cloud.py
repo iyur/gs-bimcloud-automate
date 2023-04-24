@@ -6,46 +6,47 @@ from .errors import BIMcloudBlobServerError, BIMcloudManagerError
 TS = time.time()
 
 class Cloud:
-	def __init__(self, manager_url, username, password, client_id):
-		self._manager_api = ManagerApi(manager_url)
-		self.db = DB()
+	def __init__(self, url, user, pwd, cid, logtime=0):
+		self.url = url
+		self.username = user
+		self.password = pwd
+		self.client = cid
+		self.sessionId = None
+		self.userId = None
 
-		self.username = username
-		self._password = password
-		self.client_id = client_id
-		self._session_id = None
-		self._user_id = None
+		self.apiBCM = ManagerApi(url)
+		self.apiDB = DB(logtime)
 
-		self._blob_server_sessions = {}
-		self._next_revision_for_sync = 0
+		# self.iBlobServerSessions = {}
 
 		self.iFolders = 0
 		self.iFiles = 0
 		self.iUsers = 0
 		self.iServers = 0
 
-	def run(self):
+	def collect(self):
 		try:
 			self.login()
-			self.db.logEntry()
+			self.apiDB.logEntry()
 			self.fetchFolders()
 			self.fetchServers()
-			print(f'[{round((time.time() - TS),10)}]: Entry #{self.db.logId}: {self.iServers} servers, {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins')
+			print(f'[{round((time.time() - TS),10)}]: Added to #{self.apiDB.lid}: {self.iServers} servers, {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins ({self.url})')
 		finally:
 			self.logout()
 
 	def login(self):
-		self._user_id, self._session_id = self._manager_api.create_session(self.username, self._password, self.client_id)
+		self.userId, self.sessionId = self.apiBCM.create_session(self.username, self.password, self.client)
 		print(f'[{round((time.time() - TS),10)}]: Logged as {self.username}')
 
 
 	def logout(self):
-		self._manager_api.close_session(self._session_id)
-		for server_id in self._blob_server_sessions:
-			session_id, api = self._blob_server_sessions[server_id]
-			api.close_session(session_id)
-		self._blob_server_sessions = {}
-		self._session_id = None
+		self.apiDB.close()
+		self.apiBCM.close_session(self.sessionId)
+		# for server_id in self.iBlobServerSessions:
+		# 	session_id, api = self.iBlobServerSessions[server_id]
+		# 	api.close_session(session_id)
+		# self.iBlobServerSessions = {}
+		self.sessionId = None
 		print(f'[{round((time.time() - TS),10)}]: Logged out')
 
 	def fetchFolders(self, pid='projectRoot'):
@@ -53,10 +54,10 @@ class Cloud:
 		options = { 'sort-by': 'name' }
 		criterion = { '$eq': { '$parentId': pid } }
 		try:
-			folders = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
+			folders = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
 			for f in folders:
 				self.iFolders += 1
-				self.db.addFolderData(f['id'], f['$parentId'], f['name'])
+				self.apiDB.addFolderData(f['id'], f['$parentId'], f['name'])
 				self.fetchFiles(f['id'])
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')
@@ -65,7 +66,7 @@ class Cloud:
 		options = { 'sort-by': 'name' }
 		criterion = { '$eq': { '$parentId': pid } }
 		try:
-			files = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
+			files = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
 			for f in files:
 				self.iFiles += 1
 				lock = False
@@ -78,7 +79,7 @@ class Cloud:
 					if f['access'] == 'locked':
 						lock = True
 					self.fetchUsers(f['$joinedUsers'], f['id'])
-				self.db.addFileData(f['id'], f['$parentId'], f['modelServerId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
+				self.apiDB.addFileData(f['id'], f['$parentId'], f['modelServerId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')		
 
@@ -86,7 +87,7 @@ class Cloud:
 		try:
 			for u in users:
 				self.iUsers += 1
-				self.db.addUserData(u['id'], u['username'], u['name'], jfid, u['online'], round(u['lastActive']/1000,0))
+				self.apiDB.addUserData(u['id'], u['username'], u['name'], jfid, u['online'], round(u['lastActive']/1000,0))
 		except:
 			print(f'[{round((time.time() - TS),10)}]: wrong user data')
 
@@ -94,10 +95,10 @@ class Cloud:
 		options = { 'sort-by': 'name' }
 		criterion = { '$eq': { 'type': 'modelServer' } }
 		try:
-			portal = self._manager_api.get_resource(self._session_id, by_id='portalServer')
-			modules = self._manager_api.get_resources_by_criterion(self._session_id, criterion, options)
+			portal = self.apiBCM.get_resource(self.sessionId, by_id='portalServer')
+			modules = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
 			for m in modules:
 				self.iServers += 1
-				self.db.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1,0), round(portal['$lastStartOn']/1,0))
+				self.apiDB.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1,0), round(portal['$lastStartOn']/1,0))
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')	
