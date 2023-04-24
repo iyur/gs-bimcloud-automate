@@ -4,13 +4,13 @@ import time
 
 class DB:
 
-	def __init__(self, logtime=0):
+	def __init__(self, lid=0, logtime=0):
 
 		self.path = os.path.dirname(__file__).split("lib")[0] + 'stats.db'
 		self.con = None
-		self.lid = 0
+		self.lid = lid
 		self.logtime = logtime
-		
+
 		self.connect();
 
 	def connect(self):
@@ -30,11 +30,15 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users \
-				(id text, login text, name text, online bool, spotted integer, log integer)'
+				(id text, login text, name text)'
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users_files \
 				(id text, jfid text, log integer)'
+			)
+			con.execute(
+				'CREATE TABLE IF NOT EXISTS users_state \
+				(id text, online bool, spotted integer, log integer)'
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS servers \
@@ -49,7 +53,7 @@ class DB:
 		if logtime == 0: logtime = self.logtime
 		try:
 			c = self.con.cursor()
-			c.execute("SELECT id, logtime FROM entries WHERE logtime = ?", (self.logtime,))
+			c.execute("SELECT id, logtime FROM entries WHERE logtime = ?", (logtime,))
 			row = c.fetchone()
 			if row is None:
 				c.execute('SELECT MAX(id) FROM entries')
@@ -89,8 +93,14 @@ class DB:
 			c.execute("SELECT id FROM users WHERE id = ?", (id,))
 			fetch = c.fetchone()
 			if fetch is None:
-				c.execute("INSERT INTO users (id, login, name, online, spotted, log) VALUES (?, ?, ?, ?, ?, ?)", (id, login, name, online, spotted, self.lid))
-			c.execute("INSERT INTO users_files (id, jfid, log) VALUES (?, ?, ?)", (id, jfid, self.lid)) # files relationship
+				c.execute("INSERT INTO users (id, login, name) VALUES (?, ?, ?)", (id, login, name))
+			# file joins
+			c.execute("INSERT INTO users_files (id, jfid, log) VALUES (?, ?, ?)", (id, jfid, self.lid))
+			# online & activity
+			c.execute("SELECT id FROM users_state WHERE id = ? AND log = ?", (id, self.lid))
+			fetch = c.fetchone()
+			if fetch is None:
+				c.execute("INSERT INTO users_state (id, online, spotted, log) VALUES (?, ?, ?, ?)", (id, online, spotted, self.lid))
 			self.con.commit()
 		except:
 			print('something wrong with user insertion')

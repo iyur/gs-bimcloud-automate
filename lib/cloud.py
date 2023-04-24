@@ -6,7 +6,7 @@ from .errors import BIMcloudBlobServerError, BIMcloudManagerError
 TS = time.time()
 
 class Cloud:
-	def __init__(self, url, user, pwd, cid, logtime=0):
+	def __init__(self, url, user, pwd, cid, lid):
 		self.url = url
 		self.username = user
 		self.password = pwd
@@ -15,9 +15,7 @@ class Cloud:
 		self.userId = None
 
 		self.apiBCM = ManagerApi(url)
-		self.apiDB = DB(logtime)
-
-		# self.iBlobServerSessions = {}
+		self.apiDB = DB(lid=lid)
 
 		self.iFolders = 0
 		self.iFiles = 0
@@ -27,7 +25,7 @@ class Cloud:
 	def collect(self):
 		try:
 			self.login()
-			self.apiDB.logEntry()
+			# self.apiDB.logEntry()
 			self.fetchFolders()
 			self.fetchServers()
 			print(f'[{round((time.time() - TS),10)}]: Added to #{self.apiDB.lid}: {self.iServers} servers, {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins ({self.url})')
@@ -42,10 +40,6 @@ class Cloud:
 	def logout(self):
 		self.apiDB.close()
 		self.apiBCM.close_session(self.sessionId)
-		# for server_id in self.iBlobServerSessions:
-		# 	session_id, api = self.iBlobServerSessions[server_id]
-		# 	api.close_session(session_id)
-		# self.iBlobServerSessions = {}
 		self.sessionId = None
 		print(f'[{round((time.time() - TS),10)}]: Logged out')
 

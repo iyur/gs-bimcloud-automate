@@ -25,12 +25,16 @@ if __name__ == '__main__':
 
 	servers = ['http://tw.archimatika.com:22000', 'http://tw.archimatika.com:25000']
 	logtime = int(time.time())
+	db = lib.DB()
+	db.logEntry(logtime)
 
 	processes = []
 	for server in servers:
-		p = Process(target=worker, args=(server,logtime,))
+		p = Process(target=worker, args=(server,db.lid,))
 		processes.append(p)
 		p.start()
 
 	for p in processes:
 		p.join()
+
+# 1682249720
