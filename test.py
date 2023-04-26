@@ -23,7 +23,7 @@ def worker(server, logtime):
 
 if __name__ == '__main__':
 
-	servers = ['http://tw.archimatika.com:22000', 'http://tw.archimatika.com:25000']
+	servers = ['http://tw.archimatika.com:22000', 'http://tw.archimatika.com:24000', 'http://tw.archimatika.com:25000']
 	logtime = int(time.time())
 	db = lib.DB()
 	db.logEntry(logtime)
@@ -38,3 +38,4 @@ if __name__ == '__main__':
 		p.join()
 
 # 1682249720
+# 1682163320

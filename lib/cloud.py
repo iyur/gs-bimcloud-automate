@@ -25,7 +25,6 @@ class Cloud:
 	def collect(self):
 		try:
 			self.login()
-			# self.apiDB.logEntry()
 			self.fetchFolders()
 			self.fetchServers()
 			print(f'[{round((time.time() - TS),10)}]: Added to #{self.apiDB.lid}: {self.iServers} servers, {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins ({self.url})')
@@ -64,24 +63,22 @@ class Cloud:
 			for f in files:
 				self.iFiles += 1
 				lock = False
-				type = 10
 				if f['type'] == 'library':
 					build = '0'
-					type = 20
 				else:
 					build = f['$version']
 					if f['access'] == 'locked':
 						lock = True
-					self.fetchUsers(f['$joinedUsers'], f['id'])
-				self.apiDB.addFileData(f['id'], f['$parentId'], f['modelServerId'], f['name'], type, f['$size'], lock, f['$modifiedDate']/1000, build)
+					self.fetchUsers(f['$joinedUsers'], f['id'], f['modelServerId'])
+				self.apiDB.addFileData(f['id'], f['$parentId'], f['modelServerId'], f['name'], f['type'], f['$size'], lock, f['$modifiedDate']/1000, build)
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')		
 
-	def fetchUsers(self, users, jfid):
+	def fetchUsers(self, users, jfid, sid):
 		try:
 			for u in users:
 				self.iUsers += 1
-				self.apiDB.addUserData(u['id'], u['username'], u['name'], jfid, u['online'], round(u['lastActive']/1000,0))
+				self.apiDB.addUserData(u['id'], u['username'], u['name'], jfid, sid, u['online'], round(u['lastActive']/1000,0))
 		except:
 			print(f'[{round((time.time() - TS),10)}]: wrong user data')
 
@@ -95,4 +92,4 @@ class Cloud:
 				self.iServers += 1
 				self.apiDB.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1,0), round(portal['$lastStartOn']/1,0))
 		except BIMcloudManagerError as err:
-			print(f'[{round((time.time() - TS),10)}]: {err}')	
+			print(f'[{round((time.time() - TS),10)}]: {err}')
