@@ -2,6 +2,7 @@ import argparse
 import sys
 import lib
 import time
+import datetime
 from multiprocessing import Process
 
 def worker(server, logtime):
@@ -27,6 +28,7 @@ if __name__ == '__main__':
 	logtime = int(time.time())
 	db = lib.DB()
 	db.logEntry(logtime)
+	print(datetime.datetime.fromtimestamp(logtime))
 
 	processes = []
 	for server in servers:

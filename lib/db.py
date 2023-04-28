@@ -34,11 +34,7 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users_files \
-				(id text, jfid text, log integer)'
-			)
-			con.execute(
-				'CREATE TABLE IF NOT EXISTS users_state \
-				(id text, online bool, spotted integer, log integer)'
+				(id text, jfid text, online bool, activity integer, log integer)'
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS servers \
@@ -87,7 +83,7 @@ class DB:
 		except:
 			print('something wrong with file insertion')
 
-	def addUserData(self, id, login, name, jfid, sid, online, spotted):
+	def addUserData(self, id, login, name, jfid, sid, online, activity):
 		try:
 			c = self.con.cursor()
 			c.execute("SELECT id, sid FROM users WHERE id = ? AND sid = ?", (id, sid,))
@@ -95,12 +91,7 @@ class DB:
 			if fetch is None:
 				c.execute("INSERT INTO users (id, sid, login, name) VALUES (?, ?, ?, ?)", (id, sid, login, name))
 			# file joins
-			c.execute("INSERT INTO users_files (id, jfid, log) VALUES (?, ?, ?)", (id, jfid, self.lid))
-			# online & activity
-			c.execute("SELECT id FROM users_state WHERE id = ? AND log = ?", (id, self.lid))
-			fetch = c.fetchone()
-			if fetch is None:
-				c.execute("INSERT INTO users_state (id, online, spotted, log) VALUES (?, ?, ?, ?)", (id, online, spotted, self.lid))
+			c.execute("INSERT INTO users_files (id, jfid, online, activity, log) VALUES (?, ?, ?, ?, ?)", (id, jfid, online, activity, self.lid))
 			self.con.commit()
 		except:
 			print('something wrong with user insertion')
