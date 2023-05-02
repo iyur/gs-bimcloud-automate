@@ -22,7 +22,7 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS folders \
-				(id text, pid text, name text, log integer)'
+				(id text, pid text, sid text, name text, log integer)'
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS files \
@@ -67,10 +67,10 @@ class DB:
 		except:
 			print('something wrong while retrieving the log id')
 
-	def addFolderData(self, id, pid, name):
+	def addFolderData(self, id, pid, sid, name):
 		try:
 			c = self.con.cursor()
-			c.execute("INSERT INTO folders (id, pid, name, log) VALUES (?, ?, ?, ?)", (id, pid, name, self.lid))
+			c.execute("INSERT INTO folders (id, pid, sid, name, log) VALUES (?, ?, ?, ?, ?)", (id, pid, sid, name, self.lid))
 			self.con.commit()
 		except:
 			print('something wrong with folder insertion')

@@ -16,6 +16,7 @@ class Cloud:
 
 		self.apiBCM = ManagerApi(url)
 		self.apiDB = DB(lid=lid)
+		self.serverId = ''
 
 		self.iFolders = 0
 		self.iFiles = 0
@@ -25,8 +26,8 @@ class Cloud:
 	def collect(self):
 		try:
 			self.login()
-			self.fetchFolders()
 			self.fetchServers()
+			self.fetchFolders()
 			print(f'[{round((time.time() - TS),10)}]: Added to #{self.apiDB.lid}: {self.iServers} servers, {self.iFolders} folders, {self.iFiles} files and {self.iUsers} joins ({self.url})')
 		finally:
 			self.logout()
@@ -42,6 +43,20 @@ class Cloud:
 		self.sessionId = None
 		print(f'[{round((time.time() - TS),10)}]: Logged out')
 
+	def fetchServers(self):
+		options = { 'sort-by': 'name' }
+		criterion = { '$eq': { 'type': 'modelServer' } }
+		try:
+			portal = self.apiBCM.get_resource(self.sessionId, by_id='portalServer')
+			modules = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
+			for m in modules:
+				self.iServers += 1
+				self.serverId = m['id'] # TODO: fix this
+				self.apiDB.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1,0), round(portal['$lastStartOn']/1,0))
+		except BIMcloudManagerError as err:
+			print(f'[{round((time.time() - TS),10)}]: {err}')
+
+
 	def fetchFolders(self, pid='projectRoot'):
 		print(f'[{round((time.time() - TS),10)}]: Retrieving resources ...')
 		options = { 'sort-by': 'name' }
@@ -50,7 +65,7 @@ class Cloud:
 			folders = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
 			for f in folders:
 				self.iFolders += 1
-				self.apiDB.addFolderData(f['id'], f['$parentId'], f['name'])
+				self.apiDB.addFolderData(f['id'], f['$parentId'], self.serverId, f['name'])
 				self.fetchFiles(f['id'])
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')
@@ -81,15 +96,3 @@ class Cloud:
 				self.apiDB.addUserData(u['id'], u['username'], u['name'], jfid, sid, u['online'], round(u['lastActive']/1000,0))
 		except:
 			print(f'[{round((time.time() - TS),10)}]: wrong user data')
-
-	def fetchServers(self):
-		options = { 'sort-by': 'name' }
-		criterion = { '$eq': { 'type': 'modelServer' } }
-		try:
-			portal = self.apiBCM.get_resource(self.sessionId, by_id='portalServer')
-			modules = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
-			for m in modules:
-				self.iServers += 1
-				self.apiDB.addServerData(m['id'], m['name'], m['$projectFreeSpace'], round(portal['firstRunningTime']/1,0), round(portal['$lastStartOn']/1,0))
-		except BIMcloudManagerError as err:
-			print(f'[{round((time.time() - TS),10)}]: {err}')
