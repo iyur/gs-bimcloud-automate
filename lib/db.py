@@ -30,7 +30,7 @@ class DB:
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users \
-				(id text, sid text, login text, name text)'
+				(id text, sid text, login text, name text, log integer)'
 			)
 			con.execute(
 				'CREATE TABLE IF NOT EXISTS users_files \
@@ -89,7 +89,7 @@ class DB:
 			c.execute("SELECT id, sid FROM users WHERE id = ? AND sid = ?", (id, sid,))
 			fetch = c.fetchone()
 			if fetch is None:
-				c.execute("INSERT INTO users (id, sid, login, name) VALUES (?, ?, ?, ?)", (id, sid, login, name))
+				c.execute("INSERT INTO users (id, sid, login, name, log) VALUES (?, ?, ?, ?, ?)", (id, sid, login, name, self.lid))
 			# file joins
 			c.execute("INSERT INTO users_files (id, jfid, online, activity, log) VALUES (?, ?, ?, ?, ?)", (id, jfid, online, activity, self.lid))
 			self.con.commit()

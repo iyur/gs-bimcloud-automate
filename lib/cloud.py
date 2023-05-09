@@ -79,7 +79,7 @@ class Cloud:
 				self.iFiles += 1
 				lock = False
 				if f['type'] == 'library':
-					build = '0'
+					build = 'n/a'
 				else:
 					build = f['$version']
 					if f['access'] == 'locked':
