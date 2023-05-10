@@ -38,6 +38,3 @@ if __name__ == '__main__':
 
 	for p in processes:
 		p.join()
-
-# 1682249720
-# 1682163320
