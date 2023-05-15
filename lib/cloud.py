@@ -75,17 +75,26 @@ class Cloud:
 		criterion = { '$eq': { '$parentId': pid } }
 		try:
 			files = self.apiBCM.get_resources_by_criterion(self.sessionId, criterion, options)
+			# TODO: rewrite this shit
 			for f in files:
-				self.iFiles += 1
-				lock = False
-				if f['type'] == 'library':
-					build = 'n/a'
+				if f['type'] == 'resourceGroup':
+					pass
 				else:
-					build = f['$version']
-					if f['access'] == 'locked':
-						lock = True
-					self.fetchUsers(f['$joinedUsers'], f['id'], f['modelServerId'])
-				self.apiDB.addFileData(f['id'], f['$parentId'], f['modelServerId'], f['name'], f['type'], f['$size'], lock, f['$modifiedDate']/1000, build)
+					self.iFiles += 1
+					build = 'n/a'
+					lock = False
+					sid = 0
+					if f['type'] == 'project':
+						build = f['$version']
+						if f['access'] == 'locked':
+							lock = True
+						sid = f['modelServerId']
+						self.fetchUsers(f['$joinedUsers'], f['id'], f['modelServerId'])
+					elif f['type'] == 'library':
+						sid = f['modelServerId']
+					else:
+						pass
+					self.apiDB.addFileData(f['id'], f['$parentId'], sid, f['name'], f['type'], f['$size'], lock, f['$modifiedDate']/1000, build)
 		except BIMcloudManagerError as err:
 			print(f'[{round((time.time() - TS),10)}]: {err}')		
 
