@@ -2072,8 +2072,7 @@ components:
 
   # AVAILABLE ENTITIES
 
-    CriterionObject:
-      type: entity
+    Entities:
       description: |
         The list of trackable entities across the bimcloud api
 
